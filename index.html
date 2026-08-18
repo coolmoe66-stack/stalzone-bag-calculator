@@ -1,0 +1,319 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>STALZONE Lost Bag Calculator</title>
+<meta name="description" content="A simple unofficial STALZONE lost bag calculator. Convert barter materials into 20-stack block equivalents and estimate their value.">
+<meta name="theme-color" content="#0a0c0e">
+<meta property="og:title" content="STALZONE Lost Bag Calculator">
+<meta property="og:description" content="Convert lost bag contents into barter block equivalents and estimate their value.">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="manifest" href="site.webmanifest">
+<style>
+:root{
+  --bg:#090b0d; --panel:#14181c; --panel2:#0f1316; --line:#2a3137;
+  --text:#eef2f4; --muted:#98a3ac; --accent:#e0b84d; --accent2:#715c24;
+  --danger:#e17c70;
+}
+*{box-sizing:border-box}
+body{
+  margin:0; min-height:100vh; color:var(--text);
+  font-family:Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+  background:
+    radial-gradient(circle at 12% 0%,rgba(224,184,77,.08),transparent 30rem),
+    linear-gradient(180deg,#080a0b,#0d1013 60%,#090b0d);
+}
+.shell{max-width:1120px;margin:auto;padding:28px 18px 50px}
+header{display:flex;justify-content:space-between;align-items:flex-end;gap:18px;border-bottom:1px solid var(--line);padding-bottom:18px;margin-bottom:20px}
+.kicker{font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--accent);font-weight:850}
+h1{margin:4px 0 0;font-size:clamp(30px,5vw,48px);line-height:1}
+.sub{color:var(--muted);margin:9px 0 0;max-width:720px;line-height:1.5}
+.badge{font-size:11px;border:1px solid var(--accent2);border-radius:999px;padding:7px 10px;color:#f0ce72;white-space:nowrap}
+.layout{display:grid;grid-template-columns:1.4fr .75fr;gap:18px}
+@media(max-width:900px){.layout{grid-template-columns:1fr}header{flex-direction:column;align-items:flex-start}}
+.card{border:1px solid var(--line);background:linear-gradient(180deg,rgba(22,27,31,.97),rgba(15,19,22,.97));border-radius:14px;overflow:hidden;box-shadow:0 20px 50px rgba(0,0,0,.2)}
+.head{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid var(--line)}
+.head h2{font-size:14px;text-transform:uppercase;letter-spacing:.08em;margin:0}
+.body{padding:16px}
+.toolbar{display:flex;gap:8px;flex-wrap:wrap}
+button,input,select{font:inherit}
+button{cursor:pointer;border:1px solid #3a4248;background:#181d21;color:var(--text);border-radius:8px;padding:9px 12px;font-weight:750}
+button:hover{background:#20262a;border-color:#56616a}
+button.primary{background:#2b2412;color:#f2d476;border-color:var(--accent2)}
+button.danger{color:#efa79e}
+input,select{width:100%;background:#0c1013;color:var(--text);border:1px solid #343c43;border-radius:8px;padding:10px;outline:none}
+input:focus,select:focus{border-color:var(--accent2);box-shadow:0 0 0 3px rgba(224,184,77,.08)}
+.tableWrap{overflow:auto}
+table{width:100%;border-collapse:collapse;min-width:650px}
+th{padding:9px 8px;border-bottom:1px solid var(--line);font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);text-align:left}
+td{padding:8px;border-bottom:1px solid #242a2f;vertical-align:middle}
+.num{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+.bold{font-weight:850}
+.metric{border:1px solid var(--line);background:#0d1114;border-radius:11px;padding:14px}
+.metric .name{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+.metric .value{font-size:28px;font-weight:900;margin-top:4px;font-variant-numeric:tabular-nums}
+.metric.featured{border-color:var(--accent2);background:linear-gradient(145deg,#211b0e,#101417)}
+.metric.featured .value{color:#f0cd69}
+.results{display:grid;gap:10px}
+.help{font-size:12px;color:var(--muted);line-height:1.5}
+.note{font-size:12px;color:var(--muted);line-height:1.55;background:#101417;border-left:3px solid var(--accent2);border-radius:0 8px 8px 0;padding:12px 14px}
+.settings{margin-top:16px;border-top:1px solid var(--line);padding-top:14px}
+details summary{cursor:pointer;color:#d7dde1;font-weight:750}
+.settingsGrid{display:grid;gap:9px;margin-top:12px}
+.settingRow{display:grid;grid-template-columns:1.2fr 1fr .65fr;gap:8px;align-items:center}
+@media(max-width:600px){.settingRow{grid-template-columns:1fr}.settingRow .name{font-weight:700}}
+.small{font-size:11px;color:var(--muted)}
+.pill{font-size:10px;padding:4px 8px;border-radius:999px;background:#22282d;color:#b9c2ca}
+.footer{text-align:center;color:#69747c;font-size:11px;margin-top:16px}
+</style>
+</head>
+<body>
+<noscript>
+  <div style="padding:12px;background:#3b241e;color:#fff;text-align:center;font-family:system-ui,sans-serif">
+    This calculator requires JavaScript to work.
+  </div>
+</noscript>
+<div class="shell">
+<header>
+  <div>
+    <div class="kicker">Rogue's STALZONE Tools</div>
+    <h1>Lost Bag Calculator</h1>
+    <p class="sub">Enter what is inside the bag. The calculator converts the materials into their 20-stack block equivalents and estimates what those blocks are worth.</p>
+  </div>
+  <div class="badge">Simple mode</div>
+</header>
+
+<div class="layout">
+  <main class="card">
+    <div class="head">
+      <h2>Bag contents</h2>
+      <div class="toolbar">
+        <button id="addRow" class="primary">+ Add material</button>
+        <button id="clearBag" class="danger">Clear</button>
+      </div>
+    </div>
+
+    <div class="body">
+      <div class="tableWrap">
+        <table>
+          <thead>
+            <tr>
+              <th style="width:34%">Material</th>
+              <th style="width:18%">Quantity</th>
+              <th style="width:22%">Block equivalent</th>
+              <th style="width:22%">Estimated value</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="rows"></tbody>
+          <tfoot>
+            <tr>
+              <td colspan="2" class="bold">Total</td>
+              <td id="totalBlocks" class="num bold">0.00 blocks</td>
+              <td id="totalValue" class="num bold">₽0</td>
+              <td></td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+
+      <div class="note" style="margin-top:15px">
+        Each block/bundle represents <strong>20 normal barter materials</strong>. Partial blocks count proportionally, so 50 materials = 2.5 blocks.
+      </div>
+
+      <details class="settings">
+        <summary>Block prices / settings</summary>
+        <div class="help" style="margin-top:8px">
+          You normally do not need to touch this. Update a block price here if your server's auction changes.
+        </div>
+        <div id="settingsGrid" class="settingsGrid"></div>
+        <div class="toolbar" style="margin-top:10px">
+          <button id="resetPrices">Reset default prices</button>
+        </div>
+      </details>
+    </div>
+  </main>
+
+  <aside class="card">
+    <div class="head">
+      <h2>Bag value</h2>
+      <span class="pill">block-based</span>
+    </div>
+    <div class="body">
+      <div class="results">
+        <div class="metric featured">
+          <div class="name">Estimated total value</div>
+          <div class="value" id="bigValue">₽0</div>
+        </div>
+
+        <div class="metric">
+          <div class="name">Total block equivalents</div>
+          <div class="value" id="bigBlocks">0.00</div>
+        </div>
+
+        <div class="metric">
+          <div class="name">Total materials</div>
+          <div class="value" id="bigMaterials">0</div>
+        </div>
+
+        <button id="copySummary" class="primary">Copy bag summary</button>
+
+        <div class="note">
+          Example: if a <strong>Gamma Data Block</strong> is worth ₽10,000 and the bag contains 50 Gamma Data Fragments, that is <strong>2.5 blocks = ₽25,000</strong>.
+        </div>
+      </div>
+    </div>
+  </aside>
+</div>
+
+<div class="footer">
+      Saved locally in your browser • No login required<br>
+      <span style="opacity:.8">Unofficial fan-made tool • v1.0</span>
+    </div>
+</div>
+
+<script>
+const STORAGE_KEY = "stalzoneSimpleBagCalcV1";
+
+const defaults = {
+  "Red Fern": { block:"Flowering Red Fern", units:20, price:6000 },
+  "Substance 07270": { block:"Purified Substance 07270", units:20, price:34275 },
+  "Remains of a Psy-Tracker": { block:"Psy-Tracker", units:20, price:24000 },
+  "Gamma Data Fragment": { block:"Gamma Data Block", units:20, price:10000 },
+  "Quantum Battery": { block:"Portable Quantum Generator", units:20, price:58000 }
+};
+
+let materials = JSON.parse(JSON.stringify(defaults));
+const rows = document.getElementById("rows");
+const settingsGrid = document.getElementById("settingsGrid");
+const fmt = new Intl.NumberFormat("en-US",{maximumFractionDigits:0});
+
+function money(n){ return "₽"+fmt.format(Math.max(0,Math.round(Number(n)||0))); }
+function options(selected){
+  return Object.keys(materials).map(name=>`<option ${name===selected?"selected":""}>${name}</option>`).join("");
+}
+function firstMaterial(){ return Object.keys(materials)[0] || ""; }
+
+function renderSettings(){
+  settingsGrid.innerHTML="";
+  Object.entries(materials).forEach(([name,m])=>{
+    const row=document.createElement("div");
+    row.className="settingRow";
+    row.innerHTML=`
+      <div class="name">${name}<div class="small">${m.block}</div></div>
+      <div>
+        <input class="price" type="number" min="0" step="100" value="${Number(m.price)||0}">
+      </div>
+      <div class="small">per ${m.units}-stack block</div>`;
+    row.querySelector(".price").addEventListener("input",e=>{
+      materials[name].price=Math.max(0,Number(e.target.value)||0);
+      calculate();
+    });
+    settingsGrid.appendChild(row);
+  });
+}
+
+function addRow(data={}){
+  const material=data.material || firstMaterial();
+  const qty=Number(data.qty)||0;
+  const tr=document.createElement("tr");
+  tr.innerHTML=`
+    <td><select class="material">${options(material)}</select></td>
+    <td><input class="qty" type="number" min="0" step="1" value="${qty}"></td>
+    <td class="num blocks">0.00</td>
+    <td class="num value">₽0</td>
+    <td><button class="danger remove">×</button></td>`;
+  rows.appendChild(tr);
+  tr.querySelector(".material").addEventListener("change",calculate);
+  tr.querySelector(".qty").addEventListener("input",calculate);
+  tr.querySelector(".remove").addEventListener("click",()=>{tr.remove();calculate();});
+  calculate();
+}
+
+function calculate(){
+  let totalValue=0,totalBlocks=0,totalMaterials=0;
+
+  [...rows.querySelectorAll("tr")].forEach(tr=>{
+    const name=tr.querySelector(".material").value;
+    const qty=Math.max(0,Number(tr.querySelector(".qty").value)||0);
+    const m=materials[name];
+    if(!m) return;
+
+    const blocks=qty/(Number(m.units)||20);
+    const value=blocks*(Number(m.price)||0);
+
+    tr.querySelector(".blocks").textContent=blocks.toFixed(2)+" blocks";
+    tr.querySelector(".value").textContent=money(value);
+
+    totalValue+=value;
+    totalBlocks+=blocks;
+    totalMaterials+=qty;
+  });
+
+  document.getElementById("totalBlocks").textContent=totalBlocks.toFixed(2)+" blocks";
+  document.getElementById("totalValue").textContent=money(totalValue);
+  document.getElementById("bigValue").textContent=money(totalValue);
+  document.getElementById("bigBlocks").textContent=totalBlocks.toFixed(2);
+  document.getElementById("bigMaterials").textContent=fmt.format(totalMaterials);
+
+  save();
+}
+
+function save(){
+  localStorage.setItem(STORAGE_KEY,JSON.stringify({
+    materials,
+    rows:[...rows.querySelectorAll("tr")].map(tr=>({
+      material:tr.querySelector(".material").value,
+      qty:tr.querySelector(".qty").value
+    }))
+  }));
+}
+
+function load(){
+  try{
+    const s=JSON.parse(localStorage.getItem(STORAGE_KEY)||"null");
+    if(!s) return false;
+    if(s.materials) materials=s.materials;
+    renderSettings();
+    (s.rows||[]).forEach(addRow);
+    return true;
+  }catch(e){ return false; }
+}
+
+document.getElementById("addRow").addEventListener("click",()=>addRow({material:firstMaterial(),qty:100}));
+document.getElementById("clearBag").addEventListener("click",()=>{rows.innerHTML="";calculate();});
+document.getElementById("resetPrices").addEventListener("click",()=>{
+  materials=JSON.parse(JSON.stringify(defaults));
+  renderSettings();
+  calculate();
+});
+
+document.getElementById("copySummary").addEventListener("click",async()=>{
+  const lines=[...rows.querySelectorAll("tr")].map(tr=>{
+    return `${tr.querySelector(".material").value}: ${tr.querySelector(".qty").value} → ${tr.querySelector(".blocks").textContent} → ${tr.querySelector(".value").textContent}`;
+  });
+  const text=`STALZONE Lost Bag
+${lines.join("\n")}
+
+Total blocks: ${document.getElementById("bigBlocks").textContent}
+Estimated value: ${document.getElementById("bigValue").textContent}`;
+
+  try{
+    await navigator.clipboard.writeText(text);
+    const b=document.getElementById("copySummary"),old=b.textContent;
+    b.textContent="Copied!";
+    setTimeout(()=>b.textContent=old,1000);
+  }catch(e){ alert(text); }
+});
+
+if(!load()){
+  renderSettings();
+  addRow({material:"Gamma Data Fragment",qty:100});
+}
+calculate();
+</script>
+</body>
+</html>
