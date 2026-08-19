@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>STALZONE Artifact Randomizer</title>
+<meta name="description" content="Generate safe STALZONE artifact builds based on armor, holder and build goal.">
+<meta name="theme-color" content="#0a0c0e">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<style>
+:root{--bg:#090b0d;--panel:#14181c;--line:#2a3137;--text:#eef2f4;--muted:#98a3ac;--a:#e0b84d;--a2:#715c24;--good:#80cf86;--bad:#e17b70}
+*{box-sizing:border-box}body{margin:0;min-height:100vh;color:var(--text);font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:radial-gradient(circle at 12% 0%,rgba(224,184,77,.08),transparent 30rem),linear-gradient(180deg,#080a0b,#0d1013 60%,#090b0d)}
+.shell{max-width:1100px;margin:auto;padding:22px 16px 48px}.nav{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}.nav a{color:#c7d0d6;text-decoration:none;border:1px solid var(--line);padding:8px 11px;border-radius:8px;background:#111519}.nav .on{color:#f0d070;border-color:var(--a2);background:#251f11}
+header{display:flex;justify-content:space-between;gap:16px;align-items:flex-end;border-bottom:1px solid var(--line);padding-bottom:18px;margin-bottom:18px}.kick{font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--a);font-weight:850}h1{font-size:clamp(30px,5vw,48px);margin:4px 0 0;line-height:1}.sub{color:var(--muted);margin:9px 0 0;max-width:720px;line-height:1.5}.status{font-size:11px;border:1px solid var(--line);border-radius:999px;padding:7px 10px;color:var(--muted)}.status.ok{color:#91db98;border-color:#315f38}.status.err{color:#efa39a;border-color:#6c3430}
+.layout{display:grid;grid-template-columns:.9fr 1.1fr;gap:18px}@media(max-width:850px){.layout{grid-template-columns:1fr}header{align-items:flex-start;flex-direction:column}}.card{border:1px solid var(--line);background:linear-gradient(180deg,rgba(22,27,31,.97),rgba(15,19,22,.97));border-radius:14px;overflow:hidden}.head{padding:14px 16px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center}.head h2{font-size:14px;text-transform:uppercase;letter-spacing:.08em;margin:0}.body{padding:16px}
+.field{margin-bottom:12px}.grid2{display:grid;grid-template-columns:1fr 120px;gap:9px}@media(max-width:520px){.grid2{grid-template-columns:1fr}}label{display:block;color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px}select,button{font:inherit}select{width:100%;background:#0b0f12;color:var(--text);border:1px solid #343c43;border-radius:8px;padding:10px}button{cursor:pointer;border:1px solid #3a4248;background:#181d21;color:var(--text);border-radius:8px;padding:10px 13px;font-weight:750}button.primary{background:#2b2412;color:#f2d476;border-color:var(--a2)}button:disabled{opacity:.5;cursor:not-allowed}.wide{width:100%}.help{font-size:12px;color:var(--muted);line-height:1.5}.note{font-size:12px;color:var(--muted);line-height:1.55;background:#101417;border-left:3px solid var(--a2);padding:11px 13px;border-radius:0 8px 8px 0;margin-top:12px}
+.build{display:grid;gap:8px}.art{border:1px solid #30383e;background:#101417;border-radius:10px;padding:11px;display:flex;justify-content:space-between;gap:12px;align-items:center}.art strong{font-size:13px}.art span{font-size:11px;color:#9fb0b9}.safe{border:1px solid #315f38;background:#0e1810;color:#9bdd9f;border-radius:10px;padding:11px;font-size:12px;line-height:1.5;margin-bottom:10px}.empty{text-align:center;color:var(--muted);padding:34px 8px}.summary{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:10px}@media(max-width:500px){.summary{grid-template-columns:1fr}}.metric{border:1px solid var(--line);background:#0d1114;border-radius:9px;padding:10px}.metric .n{font-size:9px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}.metric .v{font-size:18px;font-weight:850;margin-top:2px}.footer{text-align:center;color:#68747c;font-size:11px;margin-top:16px}
+</style>
+</head>
+<body><div class="shell">
+<nav class="nav"><a href="index.html">Lost Bag Calculator</a><a href="gear.html">Gear Calculator</a><a class="on" href="randomizer.html">Artifact Randomizer</a></nav>
+<header><div><div class="kick">Rogue's STALZONE Tools</div><h1>Artifact Randomizer</h1><p class="sub">Choose your gear and the kind of build you want. The randomizer searches for a strong combination that stays safe from artifact infection.</p></div><div id="db" class="status">Loading EXBO data…</div></header>
+
+<div class="layout">
+<section class="card"><div class="head"><h2>Build setup</h2></div><div class="body">
+ <div class="grid2 field"><div><label>Armor</label><select id="armor" disabled><option>Loading…</option></select></div><div><label>Armor upgrade</label><select id="armorPlus" disabled></select></div></div>
+ <div class="field"><label>Container / Backpack</label><select id="holder" disabled><option>Loading…</option></select></div>
+ <div class="field"><label>Build type</label><select id="type">
+   <option value="speed">Speed</option><option value="carry">Carry weight</option><option value="speedcarry">Speed + Carry</option>
+   <option value="tank">PvP / Tank</option><option value="healing">Healing / Sustain</option><option value="stamina">Stamina</option><option value="balanced">Balanced</option>
+ </select></div>
+ <button id="generate" class="primary wide" disabled>Generate safe build</button>
+ <div id="work" class="help" style="margin-top:9px">Select armor and a holder.</div>
+ <div class="note">Generated builds use <strong>Blue +15</strong> artifacts as a baseline. Safety is checked against the worst possible Blue infection roll, while the displayed performance uses an average Blue roll. You can change grades and +levels afterward in the Gear Calculator.</div>
+</div></section>
+
+<section class="card"><div class="head"><h2>Generated build</h2><button id="send" disabled>Open in Gear Calculator</button></div><div class="body">
+ <div id="result"><div class="empty">Generate a build to see the artifacts.</div></div>
+</div></section>
+</div>
+<div class="footer">Unofficial fan-made tool • Uses EXBO's public STALZONE database</div>
+</div>
+
+<script>
+const ROOT="https://raw.githubusercontent.com/EXBO-Studio/stalzone-database/main/global",GEAR_STORE="stalzoneGearCalcV3";
+const GRADE={min:1.15,max:1.30,avg:1.225},SAFE=.5;
+let listing=[],armors=[],holders=[],arts=[],armorItem=null,holderItem=null,armorBase=null,armorPlus=0,pool=null,lastBuild=null,cache=new Map();
+const $=id=>document.getElementById(id),infectionNames=new Set(["Radiation","Temperature","Biological infection","Psy-emissions","Frost"]);
+const badNames=new Set(["Radiation","Temperature","Biological infection","Psy-emissions","Frost","Periodic damage","Movement speed reduction"]);
+const scale={"Movement speed":2,"Running speed":3,"Stamina regeneration":4,"Stamina":10,"Carry weight":12,"Bullet resistance":18,"Vitality":3,"Healing effectiveness":5,"Health regeneration":1,"Periodic healing":1,"Bleeding resistance":8};
+function en(x){return !x?"":typeof x==="string"?x:(x.lines?.en??x.text??"")}function esc(x){return String(x).replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;")}function nm(e){return en(e.name)||e.data}
+function fmt(v){v=Number(v)||0;if(Math.abs(v)>=100)return v.toFixed(0);if(Math.abs(v)>=10)return v.toFixed(1).replace(/\.0$/,"");return v.toFixed(2).replace(/0+$/,"").replace(/\.$/,"")}
+function options(a,p){return`<option value="">${p}</option>`+a.map((e,i)=>`<option value="${i}">${esc(nm(e))}</option>`).join("")}
+async function getItem(e){if(!e)return null;if(cache.has(e.data))return cache.get(e.data);let r=await fetch(ROOT+e.data);if(!r.ok)throw Error(e.data);let d=await r.json();cache.set(e.data,d);return d}
+async function getArmor(e,l){if(!e)return null;if(!l)return getItem(e);let b=await getItem(e),folder=e.data.replace(/\/[^/]+\.json$/,"") ,path=`${folder}/_variants/${b.id}/${l}.json`;try{let r=await fetch(ROOT+path);if(!r.ok)return b;return await r.json()}catch{return b}}
+function nums(i){let o=[];for(let b of(i?.infoBlocks||[]))for(let e of(b.elements||[]))if(e.type==="numeric"){let n=en(e.name);if(n)o.push({name:n,value:Number(e.value)||0})}return o}
+function ranges(i){let o=[];for(let b of(i?.infoBlocks||[]))for(let e of(b.elements||[]))if(e.type==="range"){let n=en(e.name);if(!n)continue;let a=Number(e.min)||0,z=Number(e.max)||0,base=Math.abs(a)>=Math.abs(z)?a:z,col=(e.formatted?.nameColor||e.formatted?.valueColor||"").toUpperCase(),good=col==="53C353"||(!badNames.has(n)&&col!=="C15252");o.push({name:n,base,good})}return o}
+function holderMeta(){if(!holderItem)return{eff:100,inner:0,cap:0};let s=nums(holderItem),v=n=>s.find(x=>x.name===n)?.value;return{eff:v("Effectiveness")??100,inner:v("Inner protection")??0,cap:v("Capacity")??0}}
+function profile(t){let a={};for(let s of nums(armorItem))a[s.name]=(a[s.name]||0)+s.value;let br=a["Bullet resistance"]||0,m=a["Movement speed"]||0,c=a["Carry weight"]||0,p={};
+ if(t==="speed")Object.assign(p,{"Movement speed":9+(m<0?2:0),"Running speed":5,"Stamina regeneration":2.5,"Stamina":1.5,"Carry weight":.4});
+ else if(t==="carry")Object.assign(p,{"Carry weight":8+(c<20?2:0),"Stamina":2,"Stamina regeneration":1.5,"Movement speed":1.5});
+ else if(t==="speedcarry")Object.assign(p,{"Movement speed":6,"Running speed":3,"Carry weight":6,"Stamina":2,"Stamina regeneration":2});
+ else if(t==="tank")Object.assign(p,{"Bullet resistance":br<250?8:4,"Vitality":9,"Healing effectiveness":3,"Health regeneration":3,"Bleeding resistance":1.5});
+ else if(t==="healing")Object.assign(p,{"Healing effectiveness":9,"Health regeneration":7,"Vitality":5,"Periodic healing":3,"Stamina regeneration":1});
+ else if(t==="stamina")Object.assign(p,{"Stamina":8,"Stamina regeneration":9,"Movement speed":2,"Running speed":2});
+ else Object.assign(p,{"Movement speed":3,"Running speed":2,"Stamina":3,"Stamina regeneration":3,"Carry weight":3,"Bullet resistance":br<250?3:1.5,"Vitality":3,"Healing effectiveness":2,"Health regeneration":2});
+ return p}
+function artValue(s){let v=s.base*GRADE.avg;if(s.good&&!infectionNames.has(s.name)&&s.name!=="Frost")v*=1.30;if(!infectionNames.has(s.name)&&s.name!=="Frost")v*=holderMeta().eff/100;return v}
+function score(item,t){let p=profile(t),v=0;for(let s of ranges(item)){let w=p[s.name]||0;if(w)v+=(artValue(s)/(scale[s.name]||1))*w;if(s.name==="Periodic damage"&&artValue(s)>0)v-=artValue(s)*3;if(s.name==="Movement speed reduction"&&artValue(s)>0)v-=artValue(s)*5}return v}
+function baseInfections(){let o={"Radiation":0,"Temperature":0,"Biological infection":0,"Psy-emissions":0,"Frost":0};for(let s of nums(holderItem))if(Object.hasOwn(o,s.name))o[s.name]+=s.value;return o}
+function infections(combo){let o=baseInfections(),m=holderMeta();for(let x of combo)for(let s of ranges(x.item))if(Object.hasOwn(o,s.name)){let f=s.base>=0?GRADE.max:GRADE.min,v=s.base*f;if(s.name!=="Frost")v*=Math.max(0,1-m.inner/100);o[s.name]+=v}return o}
+function safe(combo){return Object.values(infections(combo)).every(v=>v<=SAFE+1e-9)}
+function isCounter(i){return ranges(i).some(s=>infectionNames.has(s.name)&&s.base<0)}
+function pick(a){return a[Math.min(a.length-1,Math.floor((Math.random()**2)*a.length))]}
+function comboScore(c,t){return c.reduce((n,x)=>n+score(x.item,t),0)}
+async function loadPool(){if(pool)return pool;pool=[];for(let st=0;st<arts.length;st+=12){$("work").textContent=`Loading artifact stats… ${Math.min(st+12,arts.length)}/${arts.length}`;let batch=arts.slice(st,st+12),r=await Promise.allSettled(batch.map((e,j)=>getItem(e).then(item=>({index:st+j,item}))));for(let x of r)if(x.status==="fulfilled"&&ranges(x.value.item).length)pool.push(x.value)}return pool}
+function safetyText(o){let n={"Radiation":"Rad","Temperature":"Temp","Biological infection":"Bio","Psy-emissions":"Psy","Frost":"Frost"};return Object.entries(o).map(([k,v])=>`${n[k]} ${fmt(v)}`).join(" • ")}
+function targetStats(c,t){let p=profile(t),out={};for(let x of c)for(let s of ranges(x.item))if(p[s.name])out[s.name]=(out[s.name]||0)+artValue(s);return Object.entries(out).sort((a,b)=>(p[b[0]]||0)-(p[a[0]]||0)).slice(0,6)}
+async function generate(){
+ if(!armorItem||!holderItem){$("work").textContent="Select armor and a holder first.";return}
+ let btn=$("generate"),t=$("type").value,m=holderMeta(),slots=Math.max(1,Math.min(7,Math.round(m.cap||0)));btn.disabled=true;btn.textContent="Searching…";
+ try{let p=await loadPool(),rank=p.map(x=>({...x,score:score(x.item,t)})).sort((a,b)=>b.score-a.score),top=rank.filter(x=>x.score>0).slice(0,35),counters=rank.filter(x=>isCounter(x.item));if(!top.length)throw Error("No suitable artifacts");
+  let best=[],seen=new Set(),cc=m.inner>=89?.12:m.inner>=78?.25:.35;
+  for(let trial=0;trial<16000;trial++){let c=[];for(let i=0;i<slots;i++)c.push(Math.random()<cc&&counters.length?pick(counters):pick(top));if(!safe(c))continue;let key=c.map(x=>x.index).sort((a,b)=>a-b).join(",");if(seen.has(key))continue;seen.add(key);best.push({c,score:comboScore(c,t)*(0.985+Math.random()*.03)});if(best.length>70)best.sort((a,b)=>b.score-a.score).splice(45)}
+  if(!best.length){$("work").textContent="No safe build found for this holder. Try another holder or build type.";return}
+  best.sort((a,b)=>b.score-a.score);lastBuild=best[Math.floor(Math.random()*Math.min(7,best.length))].c;render(t);$("work").textContent="Safe build generated. Hit Generate again for another variation."; $("send").disabled=false;
+ }catch(e){$("work").textContent="Could not generate a build: "+e.message}finally{btn.disabled=false;btn.textContent="Generate safe build"}}
+function render(t){let inf=infections(lastBuild),ts=targetStats(lastBuild,t);$("result").innerHTML=`<div class="safe"><strong>SAFE — worst-roll check</strong><br>${safetyText(inf)}</div><div class="build">${lastBuild.map((x,i)=>`<div class="art"><strong>${i+1}. ${esc(en(x.item.name))}</strong><span>Blue +15</span></div>`).join("")}</div><div class="summary">${ts.map(([n,v])=>`<div class="metric"><div class="n">${esc(n)}</div><div class="v">${v>0?"+":""}${fmt(v)}${["Movement speed","Running speed","Stamina regeneration","Stamina","Vitality","Healing effectiveness","Health regeneration"].includes(n)?"%":""}</div></div>`).join("")}</div>`}
+async function init(){try{let r=await fetch(ROOT+"/listing.json");listing=await r.json();armors=listing.filter(x=>x.data?.startsWith("/items/armor/")&&!x.data.includes("/_variants/")).sort((a,b)=>nm(a).localeCompare(nm(b)));holders=listing.filter(x=>(x.data?.startsWith("/items/containers/")||x.data?.startsWith("/items/backpacks/"))&&!x.data.includes("/_variants/")).sort((a,b)=>nm(a).localeCompare(nm(b)));arts=listing.filter(x=>x.data?.startsWith("/items/artefact/")&&!x.data.includes("/_variants/")).sort((a,b)=>nm(a).localeCompare(nm(b)));$("armor").innerHTML=options(armors,"Select armor…");$("holder").innerHTML=options(holders,"Select holder…");$("armorPlus").innerHTML=Array.from({length:16},(_,n)=>`<option value="${n}">+${n}</option>`).join("");$("armor").disabled=$("holder").disabled=$("armorPlus").disabled=$("generate").disabled=false;$("db").textContent="EXBO database loaded";$("db").className="status ok"}catch(e){$("db").textContent="Database unavailable";$("db").className="status err"}}
+$("armor").onchange=async()=>{armorBase=$("armor").value===""?null:armors[Number($("armor").value)];armorItem=armorBase?await getArmor(armorBase,armorPlus):null;lastBuild=null;$("send").disabled=true};
+$("armorPlus").onchange=async()=>{armorPlus=Number($("armorPlus").value)||0;armorItem=armorBase?await getArmor(armorBase,armorPlus):null;lastBuild=null;$("send").disabled=true};
+$("holder").onchange=async()=>{holderItem=$("holder").value===""?null:await getItem(holders[Number($("holder").value)]);lastBuild=null;$("send").disabled=true};
+$("generate").onclick=generate;
+$("send").onclick=()=>{if(!lastBuild)return;localStorage.setItem(GEAR_STORE,JSON.stringify({armor:$("armor").value,armorPlus,holder:$("holder").value,rows:lastBuild.map(x=>({index:String(x.index),grade:"blue",plus:15}))}));location.href="gear.html"};
+init();
+</script></body></html>
